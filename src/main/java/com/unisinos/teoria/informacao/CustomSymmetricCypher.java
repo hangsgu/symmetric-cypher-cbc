@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MyCipher {
+public class CustomSymmetricCypher {
 
     private static final byte[][] subKeys = new byte[4][];
 

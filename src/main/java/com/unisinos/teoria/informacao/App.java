@@ -9,9 +9,9 @@ import java.util.List;
 public class App {
 
     public static void main(String[] args) throws Exception {
-        MyCipher myCipher = new MyCipher();
+        CustomSymmetricCypher customSymmetricCypher = new CustomSymmetricCypher();
 
-        List<Integer> encryptResult = myCipher.encrypt("message dijasiuhdiausdasd", "jkxt");
-        String result = myCipher.decrypt(encryptResult);
+        List<Integer> encryptResult = customSymmetricCypher.encrypt("message dijasiuhdiausdasd", "jkxt");
+        String result = customSymmetricCypher.decrypt(encryptResult);
     }
 }
