@@ -2,10 +2,14 @@ package com.unisinos.teoria.informacao;
 
 import htsjdk.samtools.cram.io.BitInputStream;
 import htsjdk.samtools.cram.io.DefaultBitInputStream;
+import htsjdk.samtools.util.RuntimeEOFException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class MyCipher {
 
@@ -33,33 +37,40 @@ public class MyCipher {
             20, 10, 32, 3
     };
 
-    public int[] encrypt(String message, String key) throws IOException {
+    public List<Integer> encrypt(String message, String key) throws IOException {
         ByteArrayInputStream byteArray = new ByteArrayInputStream(message.getBytes());
         BitInputStream bitInputStream = new DefaultBitInputStream(byteArray);
 
-        int[] bits = new int[48];
-        for (int i = 0; i < 48; i++) {
-            bits[i] = bitInputStream.readBit() ? 1 : 0;
-        }
+        List<Integer> bits = new ArrayList<>();
+        while (true) {
+            try {
+                bits.add(bitInputStream.readBit() ? 1 : 0);
 
+            } catch (RuntimeEOFException e) {
+                break;
+            }
+        }
         bitInputStream.close();
+
         keySchedule(key.getBytes());
 
         for (int i = 0; i < subKeys.length; i++) {
             bits = substituteAndTranspose(bits, subKeys[i]);
         }
-
         return bits;
     }
 
-    public String decrypt(int[] message) throws IOException {
+    public String decrypt(List<Integer> messageBinary) throws IOException {
         for (int i = subKeys.length - 1; i >= 0; i--) {
-            message = substituteAndTranspose(message, subKeys[i]);
+            messageBinary = substituteAndTranspose(messageBinary, subKeys[i]);
         }
 
+        String message = messageBinary.stream()
+                .map(Object::toString)
+                .collect(Collectors.joining(""));
+
         StringBuilder stringBuilder = new StringBuilder();
-        Arrays.stream(Arrays.toString(message).replaceAll("[^a-zA-Z0-9]", "")
-                .split("(?<=\\G.{8})"))
+        Arrays.stream(message.split("(?<=\\G.{8})"))
                 .forEach(s -> stringBuilder.append((char) Integer.parseInt(s, 2)));
         return stringBuilder.toString();
     }
@@ -109,21 +120,25 @@ public class MyCipher {
         }
     }
 
-    public int[] substituteAndTranspose(int[] binaryMessage, byte[] key) throws IOException {
+    public List<Integer> substituteAndTranspose(List<Integer> binaryMessage, byte[] key) throws IOException {
         ByteArrayInputStream byteArray = new ByteArrayInputStream(key);
         BitInputStream bitInputStream = new DefaultBitInputStream(byteArray);
 
-        int[] bits = new int[48];
-        for (int i = 0; i < 48; i++) {
-            bits[i] = bitInputStream.readBit() ? 1 : 0;
+        int[] bits = new int[binaryMessage.size()];
+        int index = 0;
+        while (true) {
+            try {
+                bits[index++] = bitInputStream.readBit() ? 1 : 0;
+            } catch (RuntimeEOFException e) {
+                break;
+            }
         }
         bitInputStream.close();
 
-        int[] xorResult = new int[48];
+        List<Integer> xorResult = new ArrayList<>();
         for (int i = 0; i < bits.length; i++) {
-            xorResult[i] = binaryMessage[i] ^ bits[i];
+            xorResult.add(binaryMessage.get(i) ^ bits[i]);
         }
-
         return xorResult;
     }
 
