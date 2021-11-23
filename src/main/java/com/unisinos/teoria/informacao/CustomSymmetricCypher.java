@@ -46,20 +46,11 @@ public class CustomSymmetricCypher {
         return messageBits;
     }
 
-    public String decrypt(int[] messageBits) throws IOException {
+    public int[] decrypt(int[] messageBits) throws IOException {
         for (int i = subKeys.length - 1; i >= 0; i--) {
             messageBits = substituteAndTranspose(messageBits, subKeys[i]);
         }
-
-        String message = "";
-        for (int i = 0; i < messageBits.length; i++) {
-            message += "" + messageBits[i];
-        }
-
-        StringBuilder stringBuilder = new StringBuilder();
-        Arrays.stream(message.split("(?<=\\G.{8})"))
-                .forEach(s -> stringBuilder.append((char) Integer.parseInt(s, 2)));
-        return stringBuilder.toString();
+        return messageBits;
     }
 
     public void keySchedule(byte[] initialKey) throws IOException {
