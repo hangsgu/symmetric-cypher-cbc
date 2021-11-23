@@ -6,11 +6,16 @@ import htsjdk.samtools.cram.io.BitOutputStream;
 import htsjdk.samtools.cram.io.DefaultBitInputStream;
 import htsjdk.samtools.cram.io.DefaultBitOutputStream;
 import htsjdk.samtools.util.RuntimeEOFException;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,9 +26,36 @@ import java.util.List;
 public class App {
 
     public static void main(String[] args) throws Exception {
-        byte[] result = encrypt("pirarucu e o peixe da amazonia, por favor jesus me passa nas cadeira nao ague".getBytes());
-        byte[] decrypt = decrypt(result);
 
+        String file = args[0];
+        String key = args[1];
+
+        if (key.length() != 4) {
+            throw new IllegalArgumentException("Key is not 4 chars long");
+        }
+
+        byte[] data = Files.readAllBytes(Paths.get(file));
+
+//        if ("ENCODE".equals(encodeOrDecode)) {
+//            Codification codification = codificationFactory.create(args[3], args.length >= 5 ? args[4] : "");
+//            byte[] result = codification.compress(new String(file).chars().toArray());
+//            FileUtils.writeByteArrayToFile(new File(destinationFile), result);
+//        } else {
+//            CodificationHeader codificationHeader = CodificationHeader.fromValue(bits.readBits(Codification.BYTE_SIZE));
+//            Codification codification = codificationFactory.create(codificationHeader.toString());
+//            int[] result = codification.decompress(file);
+//            String buffer = new String();
+//            for (int i = 0; i < result.length; i++) {
+//                buffer += (char) result[i];
+//            }
+//            FileUtils.write(new File(destinationFile), buffer, StandardCharsets.UTF_8);
+//        }
+
+
+        byte[] result = encrypt(data, key);
+        FileUtils.writeByteArrayToFile(new File("encrypted"), result);
+
+        byte[] decrypt = decrypt("encrypted");
         ByteArrayInputStream byteArray = new ByteArrayInputStream(decrypt);
         BitInputStream bits = new DefaultBitInputStream(byteArray);
 
@@ -39,10 +71,10 @@ public class App {
         StringBuilder stringBuilder = new StringBuilder();
         Arrays.stream(message.split("(?<=\\G.{8})"))
                 .forEach(s -> stringBuilder.append((char) Integer.parseInt(s, 2)));
-        System.out.println(stringBuilder.toString());
+        FileUtils.write(new File("decrypted"), stringBuilder.toString(), StandardCharsets.UTF_8);
     }
 
-    private static byte[] encrypt(byte[] message) throws IOException {
+    private static byte[] encrypt(byte[] message, String key) throws IOException {
         CustomSymmetricCypher customSymmetricCypher = new CustomSymmetricCypher();
         CBC cbc = new CBC();
 
@@ -88,7 +120,7 @@ public class App {
                     }
                 }
 //                int[] cbcResult = cbc.operate(messageBits, encryptResult);
-                encryptResult = customSymmetricCypher.encrypt(messageBits, "jkxt");
+                encryptResult = customSymmetricCypher.encrypt(messageBits, key);
 
                 for (int j = 0; j < encryptResult.length; j++) {
                     bitOutputStream.write(encryptResult[j] == 1);
@@ -100,11 +132,11 @@ public class App {
         return bytesOutput.toByteArray();
     }
 
-    private static byte[] decrypt(byte[] encryptedMessage) throws IOException {
+    private static byte[] decrypt(String file) throws IOException {
         CustomSymmetricCypher customSymmetricCypher = new CustomSymmetricCypher();
         CBC cbc = new CBC();
 
-        ByteArrayInputStream byteArray = new ByteArrayInputStream(encryptedMessage);
+        ByteArrayInputStream byteArray = new ByteArrayInputStream(Files.readAllBytes(Paths.get(file)));
         BitInputStream bitInputStream = new DefaultBitInputStream(byteArray);
 
         ByteArrayOutputStream bytesOutput = new ByteArrayOutputStream();
