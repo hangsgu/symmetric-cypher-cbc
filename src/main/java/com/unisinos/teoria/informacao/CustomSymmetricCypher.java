@@ -37,37 +37,24 @@ public class CustomSymmetricCypher {
             20, 10, 32, 3
     };
 
-    public List<Integer> encrypt(String message, String key) throws IOException {
-        ByteArrayInputStream byteArray = new ByteArrayInputStream(message.getBytes());
-        BitInputStream bitInputStream = new DefaultBitInputStream(byteArray);
-
-        List<Integer> bits = new ArrayList<>();
-        while (true) {
-            try {
-                bits.add(bitInputStream.readBit() ? 1 : 0);
-
-            } catch (RuntimeEOFException e) {
-                break;
-            }
-        }
-        bitInputStream.close();
-
+    public int[] encrypt(int[] messageBits, String key) throws IOException {
         keySchedule(key.getBytes());
 
-        for (int i = 0; i < subKeys.length; i++) {
-            bits = substituteAndTranspose(bits, subKeys[i]);
+        for (byte[] subKey : subKeys) {
+            messageBits = substituteAndTranspose(messageBits, subKey);
         }
-        return bits;
+        return messageBits;
     }
 
-    public String decrypt(List<Integer> messageBinary) throws IOException {
+    public String decrypt(int[] messageBits) throws IOException {
         for (int i = subKeys.length - 1; i >= 0; i--) {
-            messageBinary = substituteAndTranspose(messageBinary, subKeys[i]);
+            messageBits = substituteAndTranspose(messageBits, subKeys[i]);
         }
 
-        String message = messageBinary.stream()
-                .map(Object::toString)
-                .collect(Collectors.joining(""));
+        String message = "";
+        for (int i = 0; i < messageBits.length; i++) {
+            message += "" + messageBits[i];
+        }
 
         StringBuilder stringBuilder = new StringBuilder();
         Arrays.stream(message.split("(?<=\\G.{8})"))
@@ -120,24 +107,19 @@ public class CustomSymmetricCypher {
         }
     }
 
-    public List<Integer> substituteAndTranspose(List<Integer> binaryMessage, byte[] key) throws IOException {
+    public int[] substituteAndTranspose(int[] messageBits, byte[] key) throws IOException {
         ByteArrayInputStream byteArray = new ByteArrayInputStream(key);
         BitInputStream bitInputStream = new DefaultBitInputStream(byteArray);
 
-        int[] bits = new int[binaryMessage.size()];
-        int index = 0;
-        while (true) {
-            try {
-                bits[index++] = bitInputStream.readBit() ? 1 : 0;
-            } catch (RuntimeEOFException e) {
-                break;
-            }
+        int[] keyBits = new int[messageBits.length];
+        for (int i = 0; i < 32; i++) {
+            keyBits[i] = bitInputStream.readBit() ? 1 : 0;
         }
         bitInputStream.close();
 
-        List<Integer> xorResult = new ArrayList<>();
-        for (int i = 0; i < bits.length; i++) {
-            xorResult.add(binaryMessage.get(i) ^ bits[i]);
+        int[] xorResult = new int[messageBits.length];
+        for (int i = 0; i < xorResult.length; i++) {
+            xorResult[i] = messageBits[i] ^ keyBits[i];
         }
         return xorResult;
     }
