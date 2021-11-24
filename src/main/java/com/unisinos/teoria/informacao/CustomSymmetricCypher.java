@@ -82,7 +82,7 @@ public class CustomSymmetricCypher {
             String subKey = Long.toBinaryString(mergedKeys);
             String[] subKeyBits = subKey.split("");
 
-            for (int j = 0; j < bits.length; j++) {
+            for (int j = 0; j < subKeyBits.length && j < bits.length; j++) {
                 bits[SUBKEY_PERMUTATION[j] - 1] = subKeyBits[j];
             }
 
