@@ -13,7 +13,7 @@ Requisitos para iniciar:
 
 ### Clonando o repositório
 Para clonar o repositório deve rodar o seguinte comando:
-`git clone NOME_DO_REPO`
+`git clone https://github.com/hangsgu/symmetric-cypher-cbc`
 
 ### Como rodar
 Primeiramente tem que fazer o build do projeto com: `mvn clean install`.
