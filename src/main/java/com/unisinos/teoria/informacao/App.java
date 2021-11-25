@@ -22,6 +22,8 @@ import java.util.List;
 
 public class App {
 
+    private static CBC cbc;
+
     public static void main(String[] args) throws Exception {
 
         String file = args[0];
@@ -56,7 +58,7 @@ public class App {
 
     private static byte[] encrypt(byte[] message, String key) throws IOException {
         CustomSymmetricCypher customSymmetricCypher = new CustomSymmetricCypher();
-        CBC cbc = new CBC();
+        cbc = new CBC(key);
 
         ByteArrayInputStream byteArray = new ByteArrayInputStream(message);
         BitInputStream bitInputStream = new DefaultBitInputStream(byteArray);
@@ -114,7 +116,6 @@ public class App {
 
     private static byte[] decrypt(String file) throws IOException {
         CustomSymmetricCypher customSymmetricCypher = new CustomSymmetricCypher();
-        CBC cbc = new CBC();
 
         ByteArrayInputStream byteArray = new ByteArrayInputStream(Files.readAllBytes(Paths.get(file)));
         BitInputStream bitInputStream = new DefaultBitInputStream(byteArray);
