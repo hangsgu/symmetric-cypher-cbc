@@ -20,9 +20,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Hello world!
- */
 public class App {
 
     public static void main(String[] args) throws Exception {
@@ -35,23 +32,6 @@ public class App {
         }
 
         byte[] data = Files.readAllBytes(Paths.get(file));
-
-//        if ("ENCODE".equals(encodeOrDecode)) {
-//            Codification codification = codificationFactory.create(args[3], args.length >= 5 ? args[4] : "");
-//            byte[] result = codification.compress(new String(file).chars().toArray());
-//            FileUtils.writeByteArrayToFile(new File(destinationFile), result);
-//        } else {
-//            CodificationHeader codificationHeader = CodificationHeader.fromValue(bits.readBits(Codification.BYTE_SIZE));
-//            Codification codification = codificationFactory.create(codificationHeader.toString());
-//            int[] result = codification.decompress(file);
-//            String buffer = new String();
-//            for (int i = 0; i < result.length; i++) {
-//                buffer += (char) result[i];
-//            }
-//            FileUtils.write(new File(destinationFile), buffer, StandardCharsets.UTF_8);
-//        }
-
-
         byte[] result = encrypt(data, key);
         FileUtils.writeByteArrayToFile(new File("encrypted"), result);
 
@@ -102,7 +82,7 @@ public class App {
         }
 
         int[] messageBits = new int[48];
-        int[] encryptResult;
+        int[] encryptResult = null;
         int i = 0;
         while (true) {
             try {
@@ -119,8 +99,8 @@ public class App {
                         messageBits[j] = 0;
                     }
                 }
-//                int[] cbcResult = cbc.operate(messageBits, encryptResult);
-                encryptResult = customSymmetricCypher.encrypt(messageBits, key);
+                int[] cbcResult = cbc.operate(messageBits, encryptResult);
+                encryptResult = customSymmetricCypher.encrypt(cbcResult, key);
 
                 for (int j = 0; j < encryptResult.length; j++) {
                     bitOutputStream.write(encryptResult[j] == 1);
@@ -154,8 +134,9 @@ public class App {
         int paddingAmount = Integer.valueOf(stringBuilder.toString());
         int[] messageBits = new int[48];
         List<Integer> decryptedResult = new ArrayList<>();
-        int[] cbcBlock = null;
+        int[] cbcBlock;
         int i;
+        int[] previousBlock = null;
         while (true) {
             try {
                 for (i = 0; i < 48; i++) {
@@ -165,11 +146,18 @@ public class App {
                 break;
             }
 
+
             int[] result = customSymmetricCypher.decrypt(messageBits);
-            for (int j = 0; j < result.length; j++) {
-                decryptedResult.add(result[j]);
+            cbcBlock = cbc.operate(result, previousBlock);
+
+            previousBlock = new int[messageBits.length];
+            for (int j = 0; j < messageBits.length; j++) {
+                previousBlock[j] = messageBits[j];
             }
-//                cbcBlock = cbc.operate(decryptedResult, cbcBlock);
+
+            for (int j = 0; j < cbcBlock.length; j++) {
+                decryptedResult.add(cbcBlock[j]);
+            }
         }
 
         for (int j = 0; j < decryptedResult.size() - paddingAmount; j++) {

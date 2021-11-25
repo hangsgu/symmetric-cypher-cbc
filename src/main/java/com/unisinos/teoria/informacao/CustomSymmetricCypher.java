@@ -2,14 +2,10 @@ package com.unisinos.teoria.informacao;
 
 import htsjdk.samtools.cram.io.BitInputStream;
 import htsjdk.samtools.cram.io.DefaultBitInputStream;
-import htsjdk.samtools.util.RuntimeEOFException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class CustomSymmetricCypher {
 
