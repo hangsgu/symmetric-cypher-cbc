@@ -24,7 +24,7 @@ Para rodar a aplicação, tem que utilizar esse comando na home do projeto onde 
 
 Valor para `<input_file>`:
  - O path do seu arquivo em relação a pasta principal do projeto
- - O programa irá encriptar de decriptar o arquivo fornecido, haverá 2 arquivos novos gerados: encrypted.txt e decrypted.txt
+ - O programa irá encriptar e decriptar o arquivo fornecido, haverá 2 arquivos novos gerados: encrypted.txt e decrypted.txt
 
 Valor para `<key>`:
  - Valor da chave para encriptação. Tamanho: 4
